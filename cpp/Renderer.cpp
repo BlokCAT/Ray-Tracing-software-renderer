@@ -13,11 +13,9 @@ inline float Crad(float deg)
 	return deg * M_PI / 180.f;
 }
 
-void Renderer::Render(const Scene &scene)
+void Renderer::Render( Scene &scene)
 {
 	const static Vector3f eyes(0);
-
-	int spp = 4000;
 	int idx = 0;
 	std::vector<Vector3f> frbuf (scene.w * scene.h);
 	
@@ -42,21 +40,24 @@ void Renderer::Render(const Scene &scene)
 				frbuf[idx] = frbuf[idx] + scene.PathTracing(ray, 0) / spp;
 			}
 			idx++;
-			printf("进度----------------------%.2lf%% \n" , 100 * (float)idx / (float)(scene.h * scene.w) );
+			
 		}
+		//printf("进度----------------------------------%.2lf%% \n" , 100 * (float)idx / (float)(scene.h * scene.w) );
+
+		UpdateProgress((float)idx / (float)(scene.h * scene.w));
 	}
 
 	int cnt = 14;
 	char path[999];
-	snprintf(path, sizeof(path), "all/test222.ppm", cnt);
+	snprintf(path, sizeof(path), "all/聚焦.ppm", cnt);
 	cnt++;
 	FILE* fp = fopen(path, "wb");
 	(void)fprintf(fp, "P6\n%d %d\n255\n", scene.w, scene.h);
 	for (auto i = 0; i < scene.h * scene.w; ++i) {
 		static unsigned char color[3];
-		color[0] = (unsigned char)(255 * std::pow(clamp(0, 1, frbuf[i].x), 0.4f));
-		color[1] = (unsigned char)(255 * std::pow(clamp(0, 1, frbuf[i].y), 0.4f));
-		color[2] = (unsigned char)(255 * std::pow(clamp(0, 1, frbuf[i].z), 0.4f));
+		color[0] = (unsigned char)(255 * std::pow(clamp(0, 1, frbuf[i].x), 0.34f));
+		color[1] = (unsigned char)(255 * std::pow(clamp(0, 1, frbuf[i].y), 0.34f));
+		color[2] = (unsigned char)(255 * std::pow(clamp(0, 1, frbuf[i].z), 0.34f));
 		fwrite(color, 1, 3, fp);
 	}
 	fclose(fp);
