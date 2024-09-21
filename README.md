@@ -7,8 +7,12 @@
 ![image](https://github.com/BlokCAT/Ray-Tracing-software-renderer/blob/main/showw.png?raw=true)
 
 这图片尺寸500*500 ， 采样率spp300
+
+
 透射图
 
+
+![image](https://github.com/BlokCAT/Ray-Tracing-software-renderer/blob/main/image-20240921120641537.png?raw=true)
 
 ## 实现
 
