@@ -9,47 +9,66 @@
 #include "Object.hpp"
 #include <iostream>
 #include <chrono>
-
+#include "AABB.hpp"
+#undef spp
+#define spp 350
 int main()
 {
 	Vector3f v1(1 , 2 , 3);
 
-	Scene scene(20 , 20);//w  h
+	Scene scene(300 , 300 ,	BVH);//w  h
 	//建立材质
 	Material* red = new Material(Vector3f(0.8, 0.1, 0.1), DIFFUSE);
-	red->ior = 0.4;
+	red->ior = 1.3;
 	red->roughness = 0.2;
-	Material* green = new Material(Vector3f(0.14f, 0.45f, 0.091f), DIFFUSE);
-	green->ior = 0.4;
+
+	Material* green = new Material(Vector3f(0.14f, 0.45f, 0.091f), DIFFUSE); 
+	green->ior = 5;
 	green->roughness = 0.5;
+
+	Material* blue = new Material(Vector3f(0.14f, 0.15f, 0.51f), DIFFUSE);
+	green->ior = 5;
+	green->roughness = 0.5;
+
+	Material* yellow= new Material(Vector3f(0.34f, 0.35f, 0.02f), DIFFUSE);
+	green->ior = 5;
+	green->roughness = 0.5;
+
 	Material *micro1 = new Material(Vector3f(0.6, 0.1, 0.1), MIRCO);
-	micro1->ior = 7;
+	micro1->ior = 4;
 	micro1->roughness = 0.3;
-	Material* micro2 = new Material(Vector3f(0.14f, 0.45f, 0.091f), MIRCO);
-	micro2->ior = 20;
+
+	Material* micro2 = new Material(Vector3f(0.14f, 0.35f, 0.091f), MIRCO);
+	micro2->ior = 18;
 	micro2->roughness = 0.3;
 
 	Material* white = new Material(Vector3f(0.725f, 0.71f, 0.63f), DIFFUSE);
+
 	Material* light1 = new Material(Vector3f(2, 2, 2), DIFFUSE);
-	//light1->SetLight((Vector3f(0.747f + 0.058f, 0.747f + 0.258f, 0.747f)* 12.0f + Vector3f(0.740f + 0.287f, 0.740f + 0.160f, 0.740f) *17.6f  + Vector3f(0.737f + 0.642f, 0.737f + 0.159f, 0.737f) *20.4f ));
 	light1->SetLight(Vector3f(90 , 90 , 80));
+
 	Material* jinzi = new Material(Vector3f(0.6, 0.1, 0.1), REFLC);
+
 	Material* jinzi2 = new Material(Vector3f(0.14f, 0.30f, 0.091f), REFLC);
+
+	Material* redRefract = new Material(Vector3f(0.7, 0.1, 0.1), REFRACT);
+	redRefract->ior = 2.0;
 
 
 	//建立物体（球 ， 面 ， 光源）
-	Boll b1(Vector3f(-6.0,  -7.0 + 0.3, 40.0), 5.3, jinzi);
-	Boll b4(Vector3f(6.0, -4.0 + 0.3, 40.0), 5.3, jinzi2);
-	Plane L(Vector3f(0.0, 14, 42.0), Vector3f(0.0, -1.0, 0.0), Vector3f(0, 0, 1.0), 6, light1);
+	Boll b1(Vector3f(0,  -2.0 + 0.3, 40.0), 5.3, redRefract);
+	Boll b4(Vector3f(6.0, -4.0 + 0.3, 40.0), 5.3, green);
+	Plane L(Vector3f(0.0, 13.99, 42.0), Vector3f(0.0, -1.0, 0.0), Vector3f(0, 0, 1.0), 6, light1);
 	Plane down(Vector3f(0.0, -12 , 40.0), Vector3f(0.0, 1.0, 0.0), Vector3f(0, 0, 1.0), 26, white);
-	Plane back(Vector3f(0.0, 1, 53.0), Vector3f(0.0, 0.0, -1.0), Vector3f(0, 1, 0.0), 26, white);
+	Plane back(Vector3f(0.0, 1, 53.0), Vector3f(0.0, 0.0, -1.0), Vector3f(0, 1, 0.0), 26, yellow);
 	Plane right(Vector3f(13.0, 1, 40.0), Vector3f(-1.0, 0.0, 0.0), Vector3f(0, 1, 0.0), 26, red);
 	Plane left(Vector3f(-13.0, 1, 40.0), Vector3f(1.0, 0.0, 0.0), Vector3f(0, 1, 0.0), 26, green);
 	Plane top(Vector3f(0.0, 14, 40.0), Vector3f(0.0, -1.0, 0.0), Vector3f(0, 0, 1.0), 26, white);
 
+
 	//将物体加入场景
 	scene.Add(&b1);
-	scene.Add(&b4);
+	//scene.Add(&b4);
 	scene.Add(&L);
 	scene.Add(&down);
 	scene.Add(&back);
@@ -57,10 +76,8 @@ int main()
 	scene.Add(&left);
 	scene.Add(&top);
 
-	Renderer r;
-
-
-	
+	scene.BuildAccl();
+	Renderer r(spp);
 
 	auto start = std::chrono::system_clock::now();
 	r.Render(scene);
