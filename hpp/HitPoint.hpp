@@ -7,11 +7,13 @@
 class HitPoint
 {
 public:
-	HitPoint() {}
+	HitPoint():
+		distance(9999)
+	{}
 	Vector3f hitcoord;
-	Material* m;  //材质可以返回diffuse颜色或者 纹理的颜色
+	Material* m = NULL;  //材质可以返回diffuse颜色或者 纹理的颜色
 	Vector3f hitN;
-	float distance = 9999;
-	bool happened = false;
+	float distance ;
+	bool happened;
 };
 #endif

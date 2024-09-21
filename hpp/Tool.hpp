@@ -1,7 +1,7 @@
 #pragma once 
 #include <cmath>
 #include <random>
-
+#include <iostream>
 #undef M_PI
 #define M_PI 3.141592653589793f
 #undef RussianRoulette
@@ -52,3 +52,19 @@ inline void ChangeO(Vector3f &t1, Vector3f &t2, Vector3f &t3, Vector3f &t4)
 	if (t3.y == -0)t3.y = 0;
 	if (t3.z == -0)t3.z = 0;
 }
+
+
+inline void UpdateProgress(float progress)
+{
+	int barWidth = 70;
+
+	std::cout << "[";
+	int pos = barWidth * progress;
+	for (int i = 0; i < barWidth; ++i) {
+		if (i < pos) std::cout << "=";
+		else if (i == pos) std::cout << ">";
+		else std::cout << " ";
+	}
+	std::cout << "] " << int(progress * 100.0) << " %\r";
+	std::cout.flush();
+};

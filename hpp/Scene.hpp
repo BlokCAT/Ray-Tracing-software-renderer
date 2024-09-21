@@ -4,18 +4,27 @@
 #include "Object.hpp"
 #include "Boll.hpp"
 #include <vector>
+#include "BVHStruct.hpp"
+
+enum BuildAccelerationWay
+{
+	NO , BVH 
+};
 
 class Scene
 {
 public:
 	int w = 500, h = 500;
 	float fov = 40;
-	Scene ( int a , int b):w(a),h(b){}
+	std::vector< Object* > objs;
+	BuildAccelerationWay method;
+	BVHstruct bvh;
+	Scene ( int a , int b , BuildAccelerationWay m):w(a),h(b), method(m){}
 
-	Vector3f PathTracing(  Ray &ray, int depth)const ;
+	void BuildAccl() ;
+	Vector3f PathTracing(  Ray &ray, int depth) ;
 	void Add( Object *t);
-	void FindHit( Ray &ray ,  HitPoint &hp) const;
-	void sampleLight(HitPoint &hp, float &pdf)const ;
-private :
-	std::vector< Object* > objs ;
+	void FindHit( Ray &ray ,  HitPoint &hp) ;
+	void sampleLight(HitPoint &hp, float &pdf) ;
+
 };

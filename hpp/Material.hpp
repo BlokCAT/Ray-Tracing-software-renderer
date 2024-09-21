@@ -3,16 +3,16 @@
 #ifndef RAYTRACING_MATERIAL_H
 #define RAYTRACING_MATERIAL_H
 #include "Vector.hpp"
-
+#include <algorithm>
 enum  MaterialType
 {
-	DIFFUSE , REFLC , MIRCO
+	DIFFUSE , REFLC , MIRCO  , REFRACT
 };
 
 class Material
 {
-private:
 
+public:
 	float D_GGX(Vector3f &h, float &r, const  Vector3f& N)
 	{
 		float r2 = r * r;
@@ -54,21 +54,45 @@ private:
 		return (in * -1 + ((N * dotProduct(in, N)) * 2.0)).normalized();
 	}
 
+
+	Vector3f refract(const Vector3f &II, const Vector3f &N, const float &ior) 
+	{
+		Vector3f I = II * -1;
+		// 计算入射角的余弦值
+		float cosi = clamp(-1, 1, dotProduct(I, N));
+		// 确定折射率比和法线方向
+		float etai = 1, etat = ior;
+		Vector3f n = N;
+		if (cosi < 0)cosi = -cosi; // 入射光线从外部进入物体内部
+		else{std::swap(etai, etat); n = N * -1;}
+		// 计算折射率比
+		float eta = etai / etat;
+		// 计算折射后的光线方向
+		float k = 1 - eta * eta * (1 - cosi * cosi);
+		if (k < 0) return Vector3f(0.0f);
+		else{
+			// 计算折射光线的方向
+			return (I* eta + ( n * (eta * cosi - sqrtf(k)))).normalized();
+		}
+	}
+
+
 	void fresnel(const Vector3f &in, const Vector3f &N, float &ior, float &kr) //kr是反射的比例
 	{
 		in.normalized();
 		N.normalized();
 		float Ro = ((1.0 - ior) / (1.0 + ior)) * ((1.0 - ior) / (1.0 + ior));
 		float costheta = clamp( 0.0f , 1.0 ,  dotProduct(N, in));
-		float t = (1.0 - costheta) * (1.0 - costheta) * (1.0 - costheta) * (1.0 - costheta) * (1.0 - costheta);
+		float t = (1.0 - costheta) * (1.0 - costheta);
 		kr = Ro + (1 - Ro) * t;
 		return;
 	}
 
-public:
+
 	Material( Vector3f kd, MaterialType  t) :
 		Kd(kd),
-		mtype(t)
+		mtype(t),
+		islight(false)
 	{}
 	MaterialType mtype;
 	Vector3f Kd;
@@ -100,6 +124,7 @@ public:
 			return toWorld(localRay, N);
 			break;
 		}
+		case REFRACT:
 		case REFLC :
 		{
 			Vector3f localRay = reflect(wi, N);
@@ -126,6 +151,17 @@ public:
 			return 0.0f;
 			break;
 		}
+		case REFRACT:
+		{
+			float ans = dotProduct(wo, N);
+			if (ans > 0.0)
+			{
+				return 1.0;
+			}
+			return 0.0f;
+
+			break;
+		}
 		case REFLC:
 		{
 			float ans = dotProduct(wo, N);
@@ -141,8 +177,38 @@ public:
 		}
 	}
 
+	Vector3f GetRefracBRDF(const Vector3f& wi, const Vector3f& wo, const Vector3f& N , int flag)
+	{
+		switch (flag)
+		{
 
+		case 1:
+		{
+			float ans = dotProduct(wo, N);
+			if (ans > 0.0f)
+			{
+				Vector3f res = 1.0 / ans;
+				return res;
+			}
+			return Vector3f(0);
+		}
+		case 2:
+		{
+			float ans = dotProduct(wo, N);
+			if (ans > 0.0f)
+			{
+				Vector3f res = 1.0 / ans;
+				res = (res * Kd);
+				return res;
+			}
+			return Vector3f(0);
+			break;
+		}
+		default:
+			break;
+		}
 
+	}
 
 	Vector3f GetBRDF(const Vector3f &wi, const Vector3f &wo, const Vector3f &N)
 	{
@@ -154,7 +220,7 @@ public:
 			if (ans > 0.0f)
 			{
 				Vector3f res = Kd / M_PI;
-				return res ;
+				return res;
 			}
 			return Vector3f(0.0f);
 			break;
@@ -165,8 +231,7 @@ public:
 			if (ans > 0.0f)
 			{
 				Vector3f res = 1.0 / ans;
-				//fresnel(wi, N, ior, K);
-				res = res * Kd;
+				res =( res * Kd) ;
 				return res;
 			}
 			return Vector3f(0);
@@ -186,8 +251,6 @@ public:
 			else
 				return Vector3f(0.0f);
 			break;
-
-
 		}
 		default:
 			break;

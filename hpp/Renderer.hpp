@@ -5,8 +5,9 @@
 class Renderer
 {
 public:
-
+	int spp;
+	Renderer ( int s):spp(s){}
 	static float Crad(float deg);
-	void Render(const Scene &scene);
+	void Render(Scene &scene);
 
 };
