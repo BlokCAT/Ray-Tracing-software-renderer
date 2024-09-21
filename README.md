@@ -12,7 +12,7 @@
 透射图
 
 
-![image]([https://github.com/BlokCAT/Ray-Tracing-software-renderer/blob/main/image-20240921120641537.png?raw=true](https://github.com/BlokCAT/Ray-Tracing-software-renderer/blob/main/1.png?raw=true))
+![image](https://github.com/BlokCAT/Ray-Tracing-software-renderer/blob/main/1.png?raw=true)
 
 ## 实现
 
