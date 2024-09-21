@@ -4,8 +4,24 @@
 #include "Tool.hpp"
 #include <cstdio>
 
+void Scene::BuildAccl()
+{
+	switch (method)
+	{
+	case NO:
+		return;
+		break;
+	case BVH:
+		this->bvh.objects = objs;
+		this->bvh.BuiltBVH(1);
+		std::cout << "BVHæ„å»ºå®Œæ¯•ï¼\n";
+		break;
+	default:
+		break;
+	}
+}
 
-void Scene::sampleLight(HitPoint &hp, float &pdf) const
+void Scene::sampleLight(HitPoint &hp, float &pdf) 
 {
 	float gs = RandomFloat();
 	if (gs == 1)gs = 0.9;
@@ -14,18 +30,27 @@ void Scene::sampleLight(HitPoint &hp, float &pdf) const
 	return;
 }
 
-void Scene::FindHit( Ray &ray ,  HitPoint &hp) const
+
+
+void Scene::FindHit( Ray &ray ,  HitPoint &hp) 
 {
-	//Post - update of BVH acceleration structure
-	for (int i = 0; i < objs.size(); i++)
+	switch (method)
 	{
-		//std::cout << "±éÀúÃ¿Ò»¸öÎïÌåing " << std::endl;
-		objs[i]->getHitPoint(ray , hp);
-		if (hp.happened == false)continue;
-		else break;
+	case NO:
+		for (int i = 0; i < objs.size(); i++)
+		{
+			objs[i]->getHitPoint(ray, hp);
+			if (hp.happened == false)continue;
+			else break;
+		}
+		return;
+		break;
+	case BVH:
+		bvh.getHitposition(ray , hp);
+		break;
+	default:
+		break;
 	}
-	//std::cout << " ±éÀú½áÊø " << std::endl;
-	return;
 }
 
 void Scene::Add( Object *t) { 
@@ -35,8 +60,9 @@ void Scene::Add( Object *t) {
 
 
 //Path Tracing
-Vector3f Scene::PathTracing( Ray &ray, int depth)const
+Vector3f Scene::PathTracing( Ray &ray, int depth)
 {
+
 	Vector3f L_dir(0.0), L_indir(0.0);
 	//if (depth >= 1)return L_dir; 
 
@@ -44,11 +70,11 @@ Vector3f Scene::PathTracing( Ray &ray, int depth)const
 	hit_to_scene.happened = false;
 	Scene::FindHit(ray , hit_to_scene);
 
+	
 	if (!hit_to_scene.happened) return Vector3f(0);
 	if (hit_to_scene.m->islight) return hit_to_scene.m->lightIntensity;
 
-
-	//È¡³öËùÓĞ¹âÏßÔÚ³¡¾°µÄµÚÒ»¸ö½»µãµÄĞÅÏ¢
+	//å–å‡ºæ‰€æœ‰å…‰çº¿åœ¨åœºæ™¯çš„ç¬¬ä¸€ä¸ªäº¤ç‚¹çš„ä¿¡æ¯
 	Vector3f hit_pos = hit_to_scene.hitcoord;
 	Vector3f N = hit_to_scene.hitN.normalized();
 	Material * mat = hit_to_scene.m;
@@ -58,8 +84,9 @@ Vector3f Scene::PathTracing( Ray &ray, int depth)const
 	{
 	case REFLC:
 	{
-		//¼ÆËã¼ä½Ó¹âÕÕ
+		//è®¡ç®—é—´æ¥å…‰ç…§
 		float gs = RandomFloat();
+		if (gs < RussianRoulette)
 		{
 			Vector3f futureDir = mat->GetFutureDir(wi, N);
 			Ray newRay(hit_pos, futureDir);
@@ -79,10 +106,10 @@ Vector3f Scene::PathTracing( Ray &ray, int depth)const
 	case MIRCO:
 	case DIFFUSE:
 	{
-		//Ö±½Ó¹âÕÕ£¬Ëæ»ú²ÉÑù¹âÔ´
+		//ç›´æ¥å…‰ç…§ï¼Œéšæœºé‡‡æ ·å…‰æº
 		float pdf_L = 0;
 		HitPoint sample_light;
-		sampleLight(sample_light, pdf_L);
+		Scene::sampleLight(sample_light, pdf_L);
 
 		Vector3f sample_hit = sample_light.hitcoord;
 		Vector3f sampleRayDir = (sample_hit - hit_pos).normalized();
@@ -90,6 +117,7 @@ Vector3f Scene::PathTracing( Ray &ray, int depth)const
 
 		Ray sampleRay(hit_pos, sampleRayDir);
 		HitPoint hit_to_sample;
+
 		Scene::FindHit(sampleRay, hit_to_sample);
 
 		if (hit_to_sample.happened && hit_to_sample.m->islight)
@@ -100,17 +128,17 @@ Vector3f Scene::PathTracing( Ray &ray, int depth)const
 			float cos_theta2 = clamp(0.0, 1.0, dotProduct(hit_to_sample.hitN, sampleRayDir * -1));
 			if (pdf_L > 0.0001)
 				L_dir = (L_i * brdf1 * cos_theta1 * cos_theta2 / (d * d)) / pdf_L;
-			//printf("ÏñËØ¾àÀë¹âÔ´µÄ¾àÀë%.3f\n", d);
 		}
 
-		//¼ÆËã¼ä½Ó¹âÕÕ
+		//è®¡ç®—é—´æ¥å…‰ç…§
 		float gs = RandomFloat();
 		if (gs < RussianRoulette)
 		{
+			
 			Vector3f futureDir = mat->GetFutureDir(wi, N);
 			Ray newRay(hit_pos, futureDir);
 			HitPoint test;
-			FindHit(newRay, test);
+			Scene::FindHit(newRay, test);
 			if (test.happened && !test.m->islight)
 			{
 				Vector3f brdf_ = mat->GetBRDF(wi, futureDir, N);
@@ -121,10 +149,72 @@ Vector3f Scene::PathTracing( Ray &ray, int depth)const
 		}
 		break;
 	}
+	case REFRACT:
+	{
+		float gs = RandomFloat();
+		if( gs < RussianRoulette)
+		{
+			Vector3f Color_rflcet(0), Color_rfract(0);
+			float K = 0.0;
+			mat->fresnel(wi, N, mat->ior, K);
+
+			//è®¡ç®—æŠ˜å°„é¢œè‰²
+			Vector3f futureDir1 = mat->refract(wi, N , mat->ior);
+			Ray newRay1(hit_pos - (N * 0.001), futureDir1);
+			HitPoint test1;
+			test1.happened = false;
+			FindHit(newRay1, test1);
+	
+			if (test1.happened)
+			{
+				//å–å‡ºæ‰€æœ‰å…‰çº¿åœ¨å‡ºå»çš„ç‚¹çš„ä¿¡æ¯
+				Vector3f hitpos = test1.hitcoord;
+				Vector3f nn = test1.hitN.normalized();
+				Material* mt = test1.m;
+				Vector3f new_wi = (newRay1.dir * -1).normalized();
+				Vector3f futureOutDir = mt->refract(new_wi, nn, mt->ior);
+
+				if (!(!futureOutDir.x && !futureOutDir.y && !futureOutDir.z)) {
+					//æŠ˜å°„åå°„å‡ºå»çš„å…‰çº¿
+	
+					Ray outRay(hitpos + (nn * 0.001), futureOutDir);
+					HitPoint Obj_rfract_hit;
+					FindHit(outRay, Obj_rfract_hit);
+
+					if (Obj_rfract_hit.happened)
+					{
+						Vector3f Brdf_ = mt->GetRefracBRDF(new_wi, futureOutDir, nn , 1);
+						float costheta4 = dotProduct(futureOutDir, nn);
+						float Pdf_ = mt->pdf(new_wi, futureOutDir, nn);
+						if (Pdf_ > 0.0001)
+							Color_rfract = PathTracing(outRay, depth + 1) * Brdf_ * costheta4 / Pdf_ / RussianRoulette;
+					}
+				}
+			
+			}
+			
+			//è®¡ç®—æŠ˜å°„ä½“è¡¨é¢åå°„çš„é¢œè‰²
+			Vector3f futureDir2 = mat->GetFutureDir(wi, N);
+			Ray newRay2(hit_pos, futureDir2);
+			HitPoint test2;
+			FindHit(newRay2, test2);
+			if (test2.happened)
+			{
+				Vector3f brdf_ = mat->GetRefracBRDF(wi, futureDir2, N , 2);
+				float costheta5 = dotProduct(futureDir2, N);
+				float pdf_ = mat->pdf(wi, futureDir2, N);
+				if (pdf_ > 0.0001)
+					Color_rflcet = PathTracing(newRay2, depth + 1) * brdf_ * costheta5 / pdf_ / RussianRoulette;
+			}
+			L_indir = (Color_rfract) * (1 - K) + (Color_rflcet)*K;
+		}
+
+		break;
+
+	}
 	default:
 		break;
 	}
-	
 	
 	Vector3f res = L_dir + L_indir;
 	res.x = clamp(0.0, 14, res.x);
@@ -133,5 +223,4 @@ Vector3f Scene::PathTracing( Ray &ray, int depth)const
 	return res;
 }
 	
-
 
