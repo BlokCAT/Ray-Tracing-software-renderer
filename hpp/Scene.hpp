@@ -17,6 +17,7 @@ public:
 	int w = 500, h = 500;
 	float fov = 40;
 	std::vector< Object* > objs;
+	std::vector< Object* > Lightsobjs;
 	BuildAccelerationWay method;
 	BVHstruct bvh;
 	Scene ( int a , int b , BuildAccelerationWay m):w(a),h(b), method(m){}
