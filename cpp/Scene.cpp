@@ -25,8 +25,8 @@ void Scene::sampleLight(HitPoint &hp, float &pdf)
 {
 	float gs = RandomFloat();
 	if (gs == 1)gs = 0.9;
-	int aimidx = gs * objs.size();
-	objs[aimidx]->SampleLight(hp, pdf);
+	int aimidx = gs * Lightsobjs.size();
+	Lightsobjs[aimidx]->SampleLight(hp, pdf);
 	return;
 }
 
@@ -41,7 +41,6 @@ void Scene::FindHit( Ray &ray ,  HitPoint &hp)
 		{
 			objs[i]->getHitPoint(ray, hp);
 			if (hp.happened == false)continue;
-			else break;
 		}
 		return;
 		break;
@@ -55,6 +54,10 @@ void Scene::FindHit( Ray &ray ,  HitPoint &hp)
 
 void Scene::Add( Object *t) { 
 	objs.push_back(t); 
+	if (t->m->islight)
+	{
+		Lightsobjs.push_back(t);
+	}
 }
 
 
@@ -69,10 +72,10 @@ Vector3f Scene::PathTracing( Ray &ray, int depth)
 	HitPoint hit_to_scene;
 	hit_to_scene.happened = false;
 	Scene::FindHit(ray , hit_to_scene);
-
-	
 	if (!hit_to_scene.happened) return Vector3f(0);
 	if (hit_to_scene.m->islight) return hit_to_scene.m->lightIntensity;
+	
+	
 
 	//取出所有光线在场景的第一个交点的信息
 	Vector3f hit_pos = hit_to_scene.hitcoord;
@@ -115,7 +118,7 @@ Vector3f Scene::PathTracing( Ray &ray, int depth)
 		Vector3f sampleRayDir = (sample_hit - hit_pos).normalized();
 		float d = (hit_pos - sample_hit).len();
 
-		Ray sampleRay(hit_pos, sampleRayDir);
+		Ray sampleRay(hit_pos + (N * 0.01), sampleRayDir);
 		HitPoint hit_to_sample;
 
 		Scene::FindHit(sampleRay, hit_to_sample);
@@ -136,7 +139,7 @@ Vector3f Scene::PathTracing( Ray &ray, int depth)
 		{
 			
 			Vector3f futureDir = mat->GetFutureDir(wi, N);
-			Ray newRay(hit_pos, futureDir);
+			Ray newRay(hit_pos + (N * 0.0001), futureDir);
 			HitPoint test;
 			Scene::FindHit(newRay, test);
 			if (test.happened && !test.m->islight)
@@ -216,11 +219,12 @@ Vector3f Scene::PathTracing( Ray &ray, int depth)
 		break;
 	}
 	
-	Vector3f res = L_dir + L_indir;
-	res.x = clamp(0.0, 14, res.x);
-	res.y = clamp(0.0, 14, res.y);
-	res.z = clamp(0.0, 14, res.z);
+	Vector3f res = L_dir + L_indir ;
+	res.x = clamp(0.0, 1, res.x);
+	res.y = clamp(0.0, 1, res.y);
+	res.z = clamp(0.0, 1, res.z);
 	return res;
 }
 	
+
 
