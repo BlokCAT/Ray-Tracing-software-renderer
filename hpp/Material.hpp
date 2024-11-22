@@ -58,26 +58,26 @@ public:
 	Vector3f refract(const Vector3f &II, const Vector3f &N, const float &ior) 
 	{
 		Vector3f I = II * -1;
-		// ¼ÆËãÈëÉä½ÇµÄÓàÏÒÖµ
+		// è®¡ç®—å…¥å°„è§’çš„ä½™å¼¦å€¼
 		float cosi = clamp(-1, 1, dotProduct(I, N));
-		// È·¶¨ÕÛÉäÂÊ±ÈºÍ·¨Ïß·½Ïò
+		// ç¡®å®šæŠ˜å°„ç‡æ¯”å’Œæ³•çº¿æ–¹å‘
 		float etai = 1, etat = ior;
 		Vector3f n = N;
-		if (cosi < 0)cosi = -cosi; // ÈëÉä¹âÏß´ÓÍâ²¿½øÈëÎïÌåÄÚ²¿
+		if (cosi < 0)cosi = -cosi; // å…¥å°„å…‰çº¿ä»å¤–éƒ¨è¿›å…¥ç‰©ä½“å†…éƒ¨
 		else{std::swap(etai, etat); n = N * -1;}
-		// ¼ÆËãÕÛÉäÂÊ±È
+		// è®¡ç®—æŠ˜å°„ç‡æ¯”
 		float eta = etai / etat;
-		// ¼ÆËãÕÛÉäºóµÄ¹âÏß·½Ïò
+		// è®¡ç®—æŠ˜å°„åçš„å…‰çº¿æ–¹å‘
 		float k = 1 - eta * eta * (1 - cosi * cosi);
 		if (k < 0) return Vector3f(0.0f);
 		else{
-			// ¼ÆËãÕÛÉä¹âÏßµÄ·½Ïò
+			// è®¡ç®—æŠ˜å°„å…‰çº¿çš„æ–¹å‘
 			return (I* eta + ( n * (eta * cosi - sqrtf(k)))).normalized();
 		}
 	}
 
 
-	void fresnel(const Vector3f &in, const Vector3f &N, float &ior, float &kr) //krÊÇ·´ÉäµÄ±ÈÀı
+	void fresnel(const Vector3f &in, const Vector3f &N, float &ior, float &kr) //kræ˜¯åå°„çš„æ¯”ä¾‹
 	{
 		in.normalized();
 		N.normalized();
@@ -97,8 +97,8 @@ public:
 	MaterialType mtype;
 	Vector3f Kd;
 	Vector3f lightIntensity;
-	float ior; //Õâ¸ö²ÄÖÊµÄÕÛÉäÂÊ
-	bool islight;
+	float ior; //è¿™ä¸ªæè´¨çš„æŠ˜å°„ç‡
+	bool islight = false;
 	float roughness;
 
 
@@ -239,14 +239,14 @@ public:
 		}
 		case MIRCO:
 		{
-			float cosalpha = dotProduct(N, wo); //woÊÇ¹Û²â·½Ïò
+			float cosalpha = dotProduct(N, wo); //woæ˜¯è§‚æµ‹æ–¹å‘
 			if (cosalpha > 0.0f) {
 				Vector3f h = (wi + wo).normalized();
 				float F = 0.f;
 				fresnel(wi, N, ior, F);
 				float down = 4 * fabs(clamp(0.0, 1.0, dotProduct(N, wi)) * clamp(0.0, 1.0, dotProduct(N, wi))) + 0.00001;
 				float up = F * G(wi, wo, N, roughness) * D_GGX(h, roughness, N); //F * G * D
-				return  Kd * (up / down); //¼ÓÉÏKd¾ÍÊµÏÖÁËÑÕÉ«£¬µ±È»Ö÷º¯Êı¼ÇµÃ¸ø²ÄÖÊÉèÖÃKd
+				return  Kd * (up / down); //åŠ ä¸ŠKdå°±å®ç°äº†é¢œè‰²ï¼Œå½“ç„¶ä¸»å‡½æ•°è®°å¾—ç»™æè´¨è®¾ç½®Kd
 			}
 			else
 				return Vector3f(0.0f);
