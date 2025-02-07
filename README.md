@@ -1,8 +1,16 @@
 # Ray-Tracing-software-renderer
-## 简介
-注意：本项目旨在学习和分享图形学基础和光线追踪路径追踪底层原理 ， **固该项目并未使用任何图形API！**
+该仓库项目由于版本过老和为止bug较多**已经停止更新**，最新请移步：[BlokCAT/PacthTracing: A soft ray tracing renderer based on Monte Carlo integration path tracing, implemented using pure C++ and file output streams.使用纯C++和文件输出流实现的一个基于蒙德卡罗积分路径追踪的软光线追踪渲染器 (github.com)](https://github.com/BlokCAT/PacthTracing)
 
-使用纯C++和文件输出流实现的一个基于蒙德卡罗积分路径追踪的软光线追踪渲染器，实现了简易的BVH的加速结构，实现了透射折射材质 。欢迎大佬来提出优化建议和指出错误
+-----------------------------
+
+
+
+*注意：本项目旨在学习和分享图形学基础和光线追踪路径追踪底层原理 ， **固该项目并未使用任何图形API！***
+
+*使用纯C++和文件输出流实现的一个基于蒙德卡罗积分路径追踪的软光线追踪渲染器，实现了简易的BVH的加速结构，实现了透射折射材质 。欢迎大佬来提出优化建议和指出错误*
+
+
+
 ## 结果
 ![image](https://github.com/BlokCAT/Ray-Tracing-software-renderer/blob/main/showw.png?raw=true)
 
@@ -32,7 +40,7 @@
   4.折射透射材质
 
 
-  
+
 ### 实现的物体：
 
   1.继承至`Object`的球体`Boll`
